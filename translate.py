@@ -3,6 +3,8 @@ import datetime
 import copy
 import os
 import re
+import argparse
+
 # https://py-googletrans.readthedocs.io/en/latest/
 # https://pypi.org/project/googletrans/
 # https://github.com/matheuss/google-translate-api
@@ -20,6 +22,24 @@ from googletrans import Translator
 # from transcript2srt_cn_whisper import combine_whisper
 # from transcript2srt_cn_whisper import to_combine
 # from transcript2srt_cn_whisper import to_srt
+
+def parse_args():
+    """
+        parse arguments
+        return: the first argv str if there are any passed arguments; None if no argument is passed
+    """
+    parser = argparse.ArgumentParser()
+    # parser.add_argument("-dt", "--dtbase", type=int, help="filter those dt hours ago")
+    # parser.add_argument("-s", "--source", type=str, nargs='+', help="enable the specified source only")  # para nargs='+', form a list for args.source
+    #  Note: error: ambiguous option: -mt could match -m, -mtc
+    # seems parser uses ambiguous match, -pn could match -pnu
+    # parser.add_argument("-l", "--url", action="store_true", help="parse from conf_test/urls.txt")
+
+    parser.add_argument("-s", "--source", type=str, help="specify the json file name") 
+
+    args = parser.parse_args()  
+    return args
+
 
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -648,10 +668,18 @@ def main():
     # group list of transcripts
 
     in_dir = ''
+
+    args = parse_args()
+    json_arg = args.source
+    json_default =  os.path.join(in_dir, 'whisper.json')
+    json_whisper = json_default if json_arg is None else json_arg
+    if not os.path.exists(json_whisper):
+        print('input json file not found: %s' % json_whisper)
+        return
+
     out_dir = 'translated'
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
-    json_whisper =  os.path.join(in_dir, 'whisper.json')    
     whispers = standardize_whisper(json_whisper = json_whisper)   
 
     # json_whisper_std is the standardized original source which is used to combine translated transcripts
