@@ -672,7 +672,17 @@ def main():
     args = parse_args()
     json_arg = args.source
     json_default =  os.path.join(in_dir, 'whisper.json')
-    json_whisper = json_default if json_arg is None else json_arg
+    json_file = None
+    if not json_arg is None:
+        if not os.path.exists(json_arg):
+            print('File not existed: %s' % json_arg)
+            return
+        basename = os.path.basename(json_arg)
+        extension = re.findall(r'\.\w+$', basename)
+        print('Uploaded file extention is: %s' % extension)
+        json_file = re.sub(r'\.\w+$', '.json', json_arg)
+        print('whisper json should be: %s' % json_file)
+    json_whisper = json_default if json_file is None else json_file
     if not os.path.exists(json_whisper):
         print('input json file not found: %s' % json_whisper)
         return
