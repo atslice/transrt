@@ -546,7 +546,7 @@ def to_srt(translated, combines, empty_pairs = True, name = 'sentences_en_cn'):
                 },...]        
             combines:  list
             empty_pairs: boolean, if the pairs list is empty, it is true
-            name: str, will be used as the filename of the translated en_cn srt file
+            name: str, will be used as the filename of the translated en_cn srt file, txt_en_cn
     """
     out_dir = 'translated'
     if not os.path.exists(out_dir):
@@ -563,7 +563,7 @@ def to_srt(translated, combines, empty_pairs = True, name = 'sentences_en_cn'):
         write_srt2(file_name = srt_cn, _dict = combines, order = 'order', start = 'in', end = 'out', text = 'target')
         write_srt2(file_name = srt_en_cn, _dict = combines, order = 'order', start = 'in', end = 'out', text = 'text', text_second = 'target')                     
 
-    txt_en_cn = os.path.join(out_dir, 'text_transcripts_en_cn.txt')
+    txt_en_cn = os.path.join(out_dir, '%s, text_transcripts_en_cn.txt' % name)
     with open(txt_en_cn, 'w', encoding='utf-8') as writer:
         pass    
     # json_translated = os.path.join(out_dir, 'translated.json')
