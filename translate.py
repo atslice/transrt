@@ -241,7 +241,7 @@ def judge_sentence_en_2(text):
     for char in new_text:
         if char in ('?'):  # 
             c += 1
-    ignore = len(re.findall(re.compile(r'...'), new_text))  # count the ...
+    ignore = len(re.findall(re.compile(r'\.\.\.'), new_text))  # count the ...
     space_dot = len(re.findall(re.compile(r'\. +'), new_text))  # count the dot followed by space
     # "Howard K. Smith"  if you count the pattern "space after dot" as an end of sentence, you have to exclude many midle name followed by dot
     en_name = len(re.findall(re.compile(r'[A-Z][a-z]+ [A-Z]\. [A-Z][a-z]+'), new_text))  # count the English midle name, for example: Howard K. Smith, 
