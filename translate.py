@@ -2,6 +2,7 @@ import json
 import datetime
 import copy
 import os
+import shutil
 import re
 import argparse
 
@@ -528,7 +529,7 @@ def to_combine(json_transcripts, json_pairs):
     return combines, empty_pairs 
 
 
-def to_srt(translated, combines, empty_pairs = True):
+def to_srt(translated, combines, empty_pairs = True, name = 'sentences_en_cn'):
     """
         Args:
             json_translated: list
@@ -543,6 +544,7 @@ def to_srt(translated, combines, empty_pairs = True):
                 },...]        
             combines:  list
             empty_pairs: boolean, if the pairs list is empty, it is true
+            name: str, will be used as the filename of the translated en_cn srt file
     """
     out_dir = 'translated'
     if not os.path.exists(out_dir):
@@ -659,7 +661,8 @@ def to_srt(translated, combines, empty_pairs = True):
     dump_json(_file = json_new_combine, _dict = new_combines)
   
     srt_cn_sentences = os.path.join(out_dir, 'sentences_cn.srt')
-    srt_en_cn_sentences = os.path.join(out_dir, 'sentences_en_cn.srt')
+    filename = '%s.srt' % name
+    srt_en_cn_sentences = os.path.join(out_dir, filename)
     write_srt2(file_name = srt_cn_sentences, _dict = new_combines, order = 'order', start = 'in', end = 'out', text = 'cn_subtitle')
     write_srt2(file_name = srt_en_cn_sentences, _dict = new_combines, order = 'order', start = 'in', end = 'out', text = 'text', text_second = 'cn_subtitle')
 
@@ -686,6 +689,10 @@ def main():
     if not os.path.exists(json_whisper):
         print('input json file not found: %s' % json_whisper)
         return
+    basename = os.path.basename(json_whisper)
+    # extension = re.findall(r'\.\w+$', basename)
+    nameonly = re.sub(r'\.\w+$', '', basename)  # remove .m4a from xxx.f137.m4a
+    nameonly = re.sub(r'\.\w+$', '', nameonly)  # the nameonly will be used as output srt filename. remove .f137 from  xxx.f137
 
     out_dir = 'translated'
     if not os.path.exists(out_dir):
@@ -713,7 +720,14 @@ def main():
     # combine translated transcripts with the original ones
     combines, empty_pairs = to_combine(json_transcripts = json_whisper_std, json_pairs = json_pairs)   # return (list, boolean)
     # write to srt files
-    to_srt(translated = new_infos, combines = combines, empty_pairs = empty_pairs)
+    to_srt(translated = new_infos, combines = combines, empty_pairs = empty_pairs, name = nameonly)
+    # copy os.path.join(out_dir, '%s.srt' % nameonly) to current directory
+    trans_srt = os.path.join(out_dir, '%s.srt' % nameonly)
+    if os.path.exists(trans_srt):
+        try:
+            shutil.copy(trans_srt, '.')
+        except BaseException as e:
+            print('Fail to copy %s, error = %s' %(trans_srt, format(e)))
 
     
 if __name__ == "__main__":
