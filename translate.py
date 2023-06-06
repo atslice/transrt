@@ -241,13 +241,15 @@ def judge_sentence_en_2(text):
     for char in new_text:
         if char in ('?'):  # 
             c += 1
+    ignore = len(re.findall(re.compile(r'...'), new_text))  # count the ...
     space_dot = len(re.findall(re.compile(r'\. +'), new_text))  # count the dot followed by space
     # "Howard K. Smith"  if you count the pattern "space after dot" as an end of sentence, you have to exclude many midle name followed by dot
     en_name = len(re.findall(re.compile(r'[A-Z][a-z]+ [A-Z]\. [A-Z][a-z]+'), new_text))  # count the English midle name, for example: Howard K. Smith, 
     # start with one Upper case letter, then lower case letters and space, then one Uper case letter, then dot and space, Upper case letter, lowercase letters
     return_dot = len(re.findall(re.compile(r'\.$'), new_text))    # count the dot at then end of a line
     sup = len(re.findall(re.compile(r'!'), new_text))    # count the !
-    c += space_dot + return_dot + sup - en_name
+    
+    c += space_dot + return_dot + sup + ignore - en_name
     return c
 
 
@@ -592,7 +594,7 @@ def to_srt(translated, combines, empty_pairs = True, name = 'sentences_en_cn'):
         for transcript in transcripts
     ]
     joined_translated_all = ' '.join(joined_translateds)  # the full translated text
-    joined_translated_all_tmp = joined_translated_all.replace('。', '。\n').replace('？', '？\n').replace('……', '……\n').replace('！', '！\n')  # the Chinese …… maps English ...
+    joined_translated_all_tmp = joined_translated_all.replace('。', '。\n').replace('？', '？\n').replace('……', '……\n').replace('！', '！\n').replace('......', '......\n') # ......  # the Chinese …… maps English ...
     joined_translated_list = joined_translated_all_tmp.split('\n')  # split into sentences list, # the last one is empty,  the result for 'what\n'.split('\n') is ['waht', '']
     if joined_translated_list[-1] == '':
         joined_translated_list = joined_translated_list[:-1]
@@ -691,8 +693,8 @@ def main():
         return
     basename = os.path.basename(json_whisper)
     # extension = re.findall(r'\.\w+$', basename)
-    nameonly = re.sub(r'\.\w+$', '', basename)  # remove .m4a from xxx.f137.m4a
-    nameonly = re.sub(r'\.\w+$', '', nameonly)  # the nameonly will be used as output srt filename. remove .f137 from  xxx.f137
+    nameonly = re.sub(r'\.\w+$', '', basename)  # remove .m4a from xxx.f140.m4a
+    nameonly = re.sub(r'\.\w+$', '', nameonly)  # the nameonly will be used as output srt filename. remove .f140 from  xxx.f140
 
     out_dir = 'translated'
     if not os.path.exists(out_dir):
@@ -712,7 +714,7 @@ def main():
     # we will prefer joining original texts and then spliting the translated texts to match the original ones
     new_infos, pairs = translate(infos)  # trans_list default False, and pairs will be returned empty
     json_pairs = os.path.join(out_dir, 'translated_pairs.json')
-    json_translated = os.path.join(out_dir, 'translated.json')
+    json_translated = os.path.join(out_dir, '%s_translated.json' % nameonly)
     dump_json(_file = json_translated, _dict = new_infos)
     if len(pairs) > 0:
         dump_json(_file = json_pairs, _dict = pairs)
