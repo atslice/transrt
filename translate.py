@@ -237,7 +237,7 @@ def judge_sentence_en_2(text):
         return int
     """
     c = 0
-    new_text = text.replace('Mr.', 'Mr').replace('U.S.', 'US').replace('US.', 'US').replace('Dr.', 'Dr').replace('A.I.', 'AI')
+    new_text = text.replace('Mr.', 'Mr').replace('U.S.', 'US').replace('US.', 'US').replace('Dr.', 'Dr').replace('A.I.', 'AI').replace('St.', 'St')
     for char in new_text:
         if char in ('?'):  # 
             c += 1
@@ -692,9 +692,14 @@ def main():
     if not os.path.exists(json_whisper):
         print('input json file not found: %s' % json_whisper)
         return
+    
     basename = os.path.basename(json_whisper)
     # extension = re.findall(r'\.\w+$', basename)
     nameonly = re.sub(r'\.\w+$', '', basename)  # remove .m4a from xxx.f140.m4a
+    json_whisper_fmt = os.path.join(in_dir, '%s_fmt.json' % nameonly)
+    with open(json_whisper, 'r') as fp:
+        whisper_dict = json.load(fp)
+    dump_json(_file = json_whisper_fmt, _dict = whisper_dict)    # just format the whisper output for further manually check    
     nameonly = re.sub(r'\.\w+$', '', nameonly)  # the nameonly will be used as output srt filename. remove .f140 from  xxx.f140
 
     out_dir = 'translated'
