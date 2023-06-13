@@ -123,6 +123,45 @@ def combine(json_transcripts, json_pairs):
         combines.append(info)
     return combines, empty_pairs
 
+def select_opt_break(_list):
+    """
+        choose the optimal index by which the list is splited into two lists, the difference of the sum of the two lists is minimal
+        for example, [20,15,6,30] returns 1, then the list is splited into [20,15] and [6,30]
+        Args:
+            _list: list of int
+        Return: int, the opt index in the list
+    """
+    if not type(_list) is list:
+        raise ValueError('select_opt_break: incoming should be list')
+    for m in _list:
+        if not type(m) is int:
+            raise ValueError('select_opt_break: memebers in list should be int')
+        else:
+            if m < 0:
+                raise ValueError('select_opt_break: memeber should be non-negative int')
+    if len(_list) == 0:
+        raise ValueError('select_opt_break: list can not be empty')
+    if len(_list) <= 2:
+        return 0
+    i = -1
+    sum = 0
+    total = 0
+    for number in _list:
+        total += number
+    diff = total
+    for number in _list:
+        i += 1  # current index
+        sum = sum + number
+        sum_left = total - sum
+        new_diff = sum_left - sum
+        new_diff = new_diff if new_diff > 0 else (-new_diff)
+        if new_diff < diff:  # this will not happen for i == 0
+            diff = new_diff
+        else:
+            i -= 1  # last index
+            break
+    return i
+
 
 def break_line(text, chars_limit = 25):
     """
@@ -135,8 +174,9 @@ def break_line(text, chars_limit = 25):
     """
     # be careful of digit 35,000
     len_text = len(text)
-    max_chars = max(chars_limit, len_text / 2)
-    if len_text <= max_chars:  # not to break
+    # max_chars = max(chars_limit, len_text / 2)
+    max_chars = len_text / 2  # that is the chars limit for a single line for the first line
+    if len_text <= chars_limit:  # not to break
         return text
     # print(len(text))
     digits = re.findall(r'\d+[,\d{3}]+', text)  # find the digit seperated by , not perfect
@@ -152,6 +192,20 @@ def break_line(text, chars_limit = 25):
     text1 = ''
     text2 = ''
     num = len(groups)
+    if num == 0:
+        return text
+    lens = [len(group) for group in groups]
+    index = select_opt_break(lens)
+    i = 0
+    for group in groups:
+        i += 1
+        if i - 1 <= index:
+            text1 += group
+            text1 = text1 + '，' if i < num else text1
+        else:
+            text2 += group
+            text2 = text2 + '，' if i < num else text2
+    """
     i = 0
     for group in groups:
         i += 1
@@ -165,6 +219,7 @@ def break_line(text, chars_limit = 25):
             else:
                 text2 += group
                 text2 = text2 + '，' if i < num else text2
+    """
     result = text1 if text2 == '' else '%s\n%s' %(text1, text2)
     return result
 
@@ -532,10 +587,19 @@ def to_combine(json_transcripts, json_pairs):
     return combines, empty_pairs 
 
 
+def unique_list(_list):
+    """
+        remove duplicated members in list
+    """
+    if not type(_list) is list:
+        raise ValueError('incoming should be list')
+    unique_set = set(_list)
+    return list(unique_set)
+
 def to_srt(translated, combines, empty_pairs = True, name = 'sentences_en_cn'):
     """
         Args:
-            json_translated: list
+            translated: list
                 [{
                     'chars': int,
                     'number': int,
@@ -591,10 +655,18 @@ def to_srt(translated, combines, empty_pairs = True, name = 'sentences_en_cn'):
 
     
     joined_translateds = [
-        transcript['joined_translated']
+        transcript['joined_translated']  # the translated result for text_joined
         for transcript in transcripts
     ]
     joined_translated_all = ' '.join(joined_translateds)  # the full translated text
+    # it might be risky that, some . will be replaced by mistake.
+    pattern = re.compile(r'\D\.\D')  # sometimes Google Translation gets "这是上一句子.这是下一句子。"
+    should_not_dots = re.findall(pattern, joined_translated_all)
+    for should_not_dot in unique_list(should_not_dots):
+        # make sure only one . in should_not_dots
+        pattern = should_not_dot.replace('.', '\.')  # for . match any char, that is not what we expect
+        repl = should_not_dot.replace('.', '。')
+        joined_translated_all = re.sub(pattern, repl, joined_translated_all)
     joined_translated_all_tmp = joined_translated_all.replace('。', '。\n').replace('？', '？\n').replace('……', '……\n').replace('！', '！\n').replace('......', '......\n') # ......  # the Chinese …… maps English ...
     joined_translated_list = joined_translated_all_tmp.split('\n')  # split into sentences list, # the last one is empty,  the result for 'what\n'.split('\n') is ['waht', '']
     if joined_translated_list[-1] == '':
