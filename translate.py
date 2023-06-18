@@ -809,6 +809,9 @@ def main():
     # write to srt files
     to_srt(translated = new_infos, combines = combines, empty_pairs = empty_pairs, name = nameonly)
     # copy os.path.join(out_dir, '%s.srt' % nameonly) to current directory
+    whisper_srt = os.path.join(in_dir, '%s.srt' % nameonly)
+    if os.path.exists(whisper_srt):  # rename the whisper srt, if source lang is English, it is English srt
+        os.rename(whisper_srt, '%s_whisper.srt' % nameonly)
     trans_srt = os.path.join(out_dir, '%s.srt' % nameonly)
     if os.path.exists(trans_srt):
         try:
