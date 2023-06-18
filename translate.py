@@ -226,7 +226,7 @@ def break_line(text, chars_limit = 25):
     return result
 
 
-def write_srt2(file_name, _dict, order = 'order', start = 'in', end = 'out', text = 'text', text_second = None):
+def write_srt2(file_name, _dict, order = 'order', start = 'in', end = 'out', text = 'text', text_second = None, break_sub = False):
     """
         write srt file    
         Args:
@@ -236,6 +236,8 @@ def write_srt2(file_name, _dict, order = 'order', start = 'in', end = 'out', tex
             end: str, the key to read the end time            
             text: str, the key to read the text
             text_second: str, usually the key to read cn text
+            break_sub: boolean, by default, the first subtitle will not be broken into multiple lines, the second subtitle will be broken into multiple lines.
+                To also break the first subtitle into multiple lines, set this as True. (If the second subtitle is None, that means break the only subtitle into multiple lines)
     """
     with open(file_name, 'w', encoding='utf-8') as writer:
         pass  
@@ -248,6 +250,9 @@ def write_srt2(file_name, _dict, order = 'order', start = 'in', end = 'out', tex
         end_time = transform_time_srt_hour(out_time)
         time_line = '%s --> %s' %(start_time, end_time)
         with open(file_name, 'a', encoding='utf-8') as writer:
+            if break_sub:
+                subtitle = subtitle.strip(' ')
+                subtitle = break_line(subtitle, chars_limit=25)  # break the first subtitle into multiple lines
             if text_second is None:
                 script = '%s\r\n%s\r\n%s\r\n\r\n' %(str(order_int), time_line, subtitle)
             else:
@@ -627,7 +632,8 @@ def to_srt(translated, combines, empty_pairs = True, name = 'sentences_en_cn'):
     srt_en_cn = os.path.join(out_dir, 'transcripts_en_cn.srt')
     write_srt2(file_name = srt_origin, _dict = combines, order = 'order', start = 'in', end = 'out', text = 'text')
     if not empty_pairs:
-        write_srt2(file_name = srt_cn, _dict = combines, order = 'order', start = 'in', end = 'out', text = 'target')
+        write_srt2(file_name = srt_cn, _dict = combines, order = 'order', start = 'in', end = 'out', text = 'target')  
+        # that is the translation line by line, which is usually meaningless, for the source English text may not be a complete sentence in a line.
         write_srt2(file_name = srt_en_cn, _dict = combines, order = 'order', start = 'in', end = 'out', text = 'text', text_second = 'target')                     
 
     txt_en_cn = os.path.join(out_dir, '%s_text_en_cn.txt' % name)
@@ -739,7 +745,7 @@ def to_srt(translated, combines, empty_pairs = True, name = 'sentences_en_cn'):
   
     srt_cn_sentences = os.path.join(out_dir, '%s_cn.srt' % name)   # cn lang only srt
     srt_en_cn_sentences = os.path.join(out_dir, '%s.srt' % name)   # en cn double langs srt
-    write_srt2(file_name = srt_cn_sentences, _dict = new_combines, order = 'order', start = 'in', end = 'out', text = 'cn_subtitle')
+    write_srt2(file_name = srt_cn_sentences, _dict = new_combines, order = 'order', start = 'in', end = 'out', text = 'cn_subtitle', break_sub = True)
     write_srt2(file_name = srt_en_cn_sentences, _dict = new_combines, order = 'order', start = 'in', end = 'out', text = 'text', text_second = 'cn_subtitle')
 
 
