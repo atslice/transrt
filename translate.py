@@ -158,7 +158,7 @@ def select_opt_break(_list):
         if new_diff < diff:  # this will not happen for i == 0
             diff = new_diff
         else:
-            i -= 1  # last index
+            i -= 1  # previous index
             break
     return i
 
@@ -174,8 +174,7 @@ def break_line(text, chars_limit = 25):
     """
     # be careful of digit 35,000
     len_text = len(text)
-    # max_chars = max(chars_limit, len_text / 2)
-    max_chars = len_text / 2  # that is the chars limit for a single line for the first line
+
     if len_text <= chars_limit:  # not to break
         return text
     # print(len(text))
@@ -188,11 +187,11 @@ def break_line(text, chars_limit = 25):
 
     # if you can find a re.split to replace the only non-digit , then you do not need to replace digit
     groups = new_text.split('，')  # ，the Chinese ,
-    sum = 0
+    
     text1 = ''
     text2 = ''
     num = len(groups)
-    if num == 0:
+    if num < 2:
         return text
     lens = [len(group) for group in groups]
     index = select_opt_break(lens)
@@ -206,7 +205,10 @@ def break_line(text, chars_limit = 25):
             text2 += group
             text2 = text2 + '，' if i < num else text2
     """
+    # max_chars = max(chars_limit, len_text / 2)
+    max_chars = len_text / 2  # that is the chars limit for a single line for the first line    
     i = 0
+    sum = 0
     for group in groups:
         i += 1
         sum = sum + len(group) + 1  # count the length of text
@@ -735,9 +737,8 @@ def to_srt(translated, combines, empty_pairs = True, name = 'sentences_en_cn'):
     json_new_combine = os.path.join(out_dir, 'sentences_translated.json')
     dump_json(_file = json_new_combine, _dict = new_combines)
   
-    srt_cn_sentences = os.path.join(out_dir, 'sentences_cn.srt')
-    filename = '%s.srt' % name
-    srt_en_cn_sentences = os.path.join(out_dir, filename)
+    srt_cn_sentences = os.path.join(out_dir, '%s_cn.srt' % name)   # cn lang only srt
+    srt_en_cn_sentences = os.path.join(out_dir, '%s.srt' % name)   # en cn double langs srt
     write_srt2(file_name = srt_cn_sentences, _dict = new_combines, order = 'order', start = 'in', end = 'out', text = 'cn_subtitle')
     write_srt2(file_name = srt_en_cn_sentences, _dict = new_combines, order = 'order', start = 'in', end = 'out', text = 'text', text_second = 'cn_subtitle')
 
